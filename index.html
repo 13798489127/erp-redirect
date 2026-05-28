@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERP销售订单导入中转站</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            margin: 0 0 1rem;
+            font-size: 1.8rem;
+        }
+        p {
+            margin: 0.5rem 0;
+            opacity: 0.9;
+        }
+        .loading {
+            margin-top: 1.5rem;
+        }
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(255, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+        .retry-btn {
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        .retry-btn:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ERP销售订单导入中转站</h1>
+        <p>正在连接到服务器...</p>
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+        <div class="error" id="error">
+            <p>服务暂时不可用</p>
+            <p id="errorDetail"></p>
+            <button class="retry-btn" onclick="location.reload()">重试</button>
+        </div>
+    </div>
+
+    <script>
+        const GITEE_USERNAME = '13798489127';
+        const GITEE_REPO = 'erp-redirect';
+        const CONFIG_URL = `https://gitee.com/api/v5/repos/${GITEE_USERNAME}/${GITEE_REPO}/raw/config.json`;
+
+        function showError(detail) {
+            document.querySelector('.loading').style.display = 'none';
+            document.querySelector('.error').style.display = 'block';
+            document.getElementById('errorDetail').textContent = detail || '';
+        }
+
+        async function fetchConfig() {
+            try {
+                const response = await fetch(CONFIG_URL + '?t=' + Date.now());
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                const data = await response.json();
+                
+                if (!data.targetUrl) {
+                    throw new Error('配置文件格式错误');
+                }
+                
+                // 跳转到目标URL
+                window.location.href = data.targetUrl;
+                
+            } catch (error) {
+                console.error('获取配置失败:', error);
+                showError('错误: ' + error.message);
+            }
+        }
+
+        // 启动
+        fetchConfig();
+    </script>
+</body>
+</html>
