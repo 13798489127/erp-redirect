@@ -5,9 +5,9 @@
 set -e
 
 # 配置信息
-GITEE_USERNAME="13798489127"
+GITEE_USERNAME="DMysq"
 GITEE_REPO="erp-redirect"
-GITEE_TOKEN=""  # 需要填写Gitee个人访问令牌
+GITEE_TOKEN="1388de4fb726b682d8b990dcbbdf3d28"
 CONFIG_FILE="/Users/Admin/Projects/importTools/gitee-pages/config.json"
 CPOLAR_LOG="/Users/Admin/Projects/importTools/cpolar.log"
 
