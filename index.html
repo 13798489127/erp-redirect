@@ -56,6 +56,27 @@
         background: rgba(255, 0, 0, 0.2);
         border-radius: 8px;
       }
+      .success {
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(0, 255, 0, 0.15);
+        border-radius: 8px;
+      }
+      .link-btn {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.8rem 2rem;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: background 0.2s;
+      }
+      .link-btn:hover {
+        background: #f0f0f0;
+      }
       .retry-btn {
         margin-top: 1rem;
         padding: 0.8rem 1.5rem;
@@ -75,11 +96,15 @@
   <body>
     <div class="container">
       <h1>ERP销售订单导入中转站</h1>
-      <p>正在连接到服务器...</p>
       <div class="loading">
         <div class="spinner"></div>
+        <p>正在获取最新地址...</p>
       </div>
-      <div class="error" id="error">
+      <div class="success" id="success" style="display: none">
+        <p>服务已就绪</p>
+        <a id="link" href="#" class="link-btn" target="_blank">点击进入</a>
+      </div>
+      <div class="error" id="error" style="display: none">
         <p>服务暂时不可用</p>
         <p id="errorDetail"></p>
         <button class="retry-btn" onclick="location.reload()">重试</button>
@@ -93,8 +118,16 @@
 
       function showError(detail) {
         document.querySelector(".loading").style.display = "none";
-        document.querySelector(".error").style.display = "block";
+        document.getElementById("success").style.display = "none";
+        document.getElementById("error").style.display = "block";
         document.getElementById("errorDetail").textContent = detail || "";
+      }
+
+      function showSuccess(url) {
+        document.querySelector(".loading").style.display = "none";
+        document.getElementById("error").style.display = "none";
+        document.getElementById("success").style.display = "block";
+        document.getElementById("link").href = url;
       }
 
       async function fetchConfig() {
@@ -109,8 +142,7 @@
             throw new Error("配置文件格式错误");
           }
 
-          // 跳转到目标URL
-          window.location.href = data.targetUrl;
+          showSuccess(data.targetUrl);
         } catch (error) {
           console.error("获取配置失败:", error);
           showError("错误: " + error.message);
