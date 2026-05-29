@@ -1,1 +1,8 @@
+# 环境变量（包含 GitHub Token）
 .env
+
+# 监听脚本生成的临时文件
+.last-url
+
+# 日志文件
+*.log
