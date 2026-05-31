@@ -33,8 +33,8 @@ fi
 # 使用 tail -f 实时监控日志
 tail -n 0 -f "$CPOLAR_LOG" | while read -r line; do
     # 只匹配 https URL（避免 http/https 重复触发）
-    if echo "$line" | grep -qE 'https://[a-zA-Z0-9.-]+\.cpolar\.top'; then
-        NEW_URL=$(echo "$line" | grep -oE 'https://[a-zA-Z0-9.-]+\.cpolar\.top' | head -1)
+    if echo "$line" | grep -qE 'https://[a-zA-Z0-9.-]+\.cpolar\.(cn|top)'; then
+        NEW_URL=$(echo "$line" | grep -oE 'https://[a-zA-Z0-9.-]+\.cpolar\.(cn|top)' | head -1)
         
         # 去重：跳过相同的 URL
         if [ "$NEW_URL" = "$LAST_URL" ]; then
