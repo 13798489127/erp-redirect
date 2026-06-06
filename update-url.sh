@@ -50,7 +50,7 @@ if [ "$FORCE_MODE" = false ]; then
     fi
     
     # 获取最新的cpolar URL
-    NEW_URL=$(grep -oE 'https?://[a-zA-Z0-9.-]+\.cpolar\.(cn|top)' "$CPOLAR_LOG" 2>/dev/null | tail -1)
+    NEW_URL=$(grep -oE 'https?://[a-zA-Z0-9.-]+\.cpolar\.top' "$CPOLAR_LOG" 2>/dev/null | tail -1)
     
     if [ -z "$NEW_URL" ]; then
         log "${RED}错误: 无法获取cpolar URL${NC}"
