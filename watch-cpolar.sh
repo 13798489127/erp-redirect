@@ -30,6 +30,26 @@ if [ -f "$LAST_URL_FILE" ]; then
     LAST_URL=$(cat "$LAST_URL_FILE")
 fi
 
+# 启动时立即检查一次最新URL
+if [ -f "$CPOLAR_LOG" ]; then
+    LATEST_URL=$(grep -oE 'https://[a-zA-Z0-9.-]+\.cpolar\.(cn|top)' "$CPOLAR_LOG" 2>/dev/null | tail -1)
+    if [ -n "$LATEST_URL" ] && [ "$LATEST_URL" != "$LAST_URL" ]; then
+        log "${GREEN}启动时检测到新 URL: $LATEST_URL${NC}"
+        if [ -x "$UPDATE_SCRIPT" ]; then
+            log "${YELLOW}正在执行更新...${NC}"
+            if "$UPDATE_SCRIPT" --force "$LATEST_URL"; then
+                log "${GREEN}更新成功${NC}"
+                LAST_URL="$LATEST_URL"
+                echo "$LATEST_URL" > "$LAST_URL_FILE"
+            else
+                log "${RED}更新失败${NC}"
+            fi
+        else
+            log "${RED}错误: 更新脚本不存在或不可执行: $UPDATE_SCRIPT${NC}"
+        fi
+    fi
+fi
+
 # 使用 tail -f 实时监控日志
 tail -n 0 -f "$CPOLAR_LOG" | while read -r line; do
     # 只匹配 https URL（避免 http/https 重复触发）

@@ -97,13 +97,29 @@ git add config.json
 git commit -m "Update URL: $NEW_URL [$(date '+%Y-%m-%d %H:%M:%S')]"
 
 # 如果配置了Token，使用HTTPS推送；否则使用SSH
-if [ -n "$GITHUB_TOKEN" ]; then
-    # 使用Token认证推送
-    git push "https://${GITHUB_TOKEN}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git" main
-else
-    # 使用SSH推送（需要配置SSH key）
-    git push origin main 2>/dev/null || {
-        log "${RED}推送失败！请配置以下任一方式:${NC}"
+MAX_RETRIES=3
+RETRY_DELAY=5
+
+for i in $(seq 1 $MAX_RETRIES); do
+    if [ -n "$GITHUB_TOKEN" ]; then
+        # 使用Token认证推送
+        if git push "https://${GITHUB_TOKEN}@github.com/${GITHUB_USERNAME}/${GITHUB_REPO}.git" main; then
+            break
+        fi
+    else
+        # 使用SSH推送（需要配置SSH key）
+        if git push origin main 2>/dev/null; then
+            break
+        fi
+    fi
+    
+    if [ $i -lt $MAX_RETRIES ]; then
+        log "${YELLOW}推送失败，${RETRY_DELAY}秒后重试 ($i/$MAX_RETRIES)...${NC}"
+        sleep $RETRY_DELAY
+    else
+        log "${RED}推送失败！已重试${MAX_RETRIES}次${NC}"
+        echo ""
+        echo "请配置以下任一方式:"
         echo ""
         echo "方式1: 配置 GitHub Personal Access Token"
         echo "  export GITHUB_TOKEN=\"your_token\""
@@ -113,8 +129,8 @@ else
         echo "  ssh-keygen -t ed25519 -C \"your_email@example.com\""
         echo "  然后将公钥添加到 GitHub: https://github.com/settings/keys"
         exit 1
-    }
-fi
+    fi
+done
 
 log "${GREEN}✓ GitHub配置已更新${NC}"
 log "${GREEN}✓ 访问地址: https://${GITHUB_USERNAME}.github.io/${GITHUB_REPO}/${NC}"
