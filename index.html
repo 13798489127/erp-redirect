@@ -91,6 +91,19 @@
       .retry-btn:hover {
         background: #f0f0f0;
       }
+      .warning {
+        display: none;
+        margin-top: 1.5rem;
+        padding: 1rem;
+        background: rgba(255, 200, 0, 0.2);
+        border-radius: 8px;
+      }
+      .warning .btn-group {
+        margin-top: 1rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+      }
     </style>
   </head>
   <body>
@@ -104,6 +117,13 @@
         <p>服务已就绪</p>
         <a id="link" href="#" class="link-btn" target="_blank">点击进入</a>
       </div>
+      <div class="warning" id="warning" style="display: none">
+        <p id="warningDetail"></p>
+        <div class="btn-group">
+          <button class="retry-btn" onclick="location.reload()">刷新重试</button>
+          <button class="link-btn" id="forceAccessBtn" style="margin-top: 0">仍然访问</button>
+        </div>
+      </div>
       <div class="error" id="error" style="display: none">
         <p>服务暂时不可用</p>
         <p id="errorDetail"></p>
@@ -115,19 +135,55 @@
       const GITHUB_USERNAME = "13798489127";
       const GITHUB_REPO = "erp-redirect";
       const CONFIG_URL = `./config.json`;
+      const MAX_AGE_HOURS = 24;
 
       function showError(detail) {
         document.querySelector(".loading").style.display = "none";
         document.getElementById("success").style.display = "none";
+        document.getElementById("warning").style.display = "none";
         document.getElementById("error").style.display = "block";
         document.getElementById("errorDetail").textContent = detail || "";
       }
 
-      function showSuccess(url) {
+      function showWarning(detail, url) {
         document.querySelector(".loading").style.display = "none";
+        document.getElementById("success").style.display = "none";
         document.getElementById("error").style.display = "none";
-        document.getElementById("success").style.display = "block";
-        document.getElementById("link").href = url;
+        document.getElementById("warning").style.display = "block";
+        document.getElementById("warningDetail").textContent = detail;
+        document.getElementById("forceAccessBtn").onclick = function() {
+          window.location.href = url;
+        };
+      }
+
+      function showSuccess(url) {
+        window.location.href = url;
+      }
+
+      function isExpired(updatedAt) {
+        try {
+          const updatedTime = new Date(updatedAt).getTime();
+          const now = Date.now();
+          const hoursDiff = (now - updatedTime) / (1000 * 60 * 60);
+          return hoursDiff > MAX_AGE_HOURS;
+        } catch {
+          return true;
+        }
+      }
+
+      async function checkConnectivity(url) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
+          await fetch(url, {
+            mode: "no-cors",
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+          return true;
+        } catch {
+          return false;
+        }
       }
 
       async function fetchConfig() {
@@ -140,6 +196,20 @@
 
           if (!data.targetUrl) {
             throw new Error("配置文件格式错误");
+          }
+
+          if (data.updatedAt && isExpired(data.updatedAt)) {
+            showWarning(
+              "链接已超过 " + MAX_AGE_HOURS + " 小时，可能已失效（更新于 " + data.updatedAt + "）",
+              data.targetUrl
+            );
+            return;
+          }
+
+          const isReachable = await checkConnectivity(data.targetUrl);
+          if (!isReachable) {
+            showError("目标服务不可达，隧道链接可能已重置");
+            return;
           }
 
           showSuccess(data.targetUrl);
